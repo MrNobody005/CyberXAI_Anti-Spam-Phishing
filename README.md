@@ -6,3 +6,4 @@ LLm de détection de mail frauduleux sur la base d'un score de confiance et se p
 
 Nikos le gros bouff hahaahahahahaha
 Théotime est américain !
+Damien le rouquin Rn manifestor
