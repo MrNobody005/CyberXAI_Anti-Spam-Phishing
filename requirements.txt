@@ -1,0 +1,3 @@
+# TÂCHE LIÉE : TT-08 (Setup environnement Python & Transformers)
+# Responsable : [Nom du Membre B]
+# Description : Lister ici les dépendances (fastapi, transformers, torch, uvicorn...)
