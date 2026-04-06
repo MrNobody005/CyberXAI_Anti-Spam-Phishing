@@ -1,3 +1,7 @@
 # TÂCHE LIÉE : TT-08 (Setup environnement Python & Transformers)
-# Responsable : [Nom du Membre B]
-# Description : Lister ici les dépendances (fastapi, transformers, torch, uvicorn...)
+fastapi==0.110.0
+uvicorn==0.27.1
+python-multipart==0.0.9
+# Pour le ml
+transformers
+torch --index-url https://download.pytorch.org/whl/cpu
