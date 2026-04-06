@@ -1,7 +1,8 @@
-# TÂCHE LIÉE : TT-08 (Setup environnement Python & Transformers)
 fastapi==0.110.0
 uvicorn==0.27.1
 python-multipart==0.0.9
-# Pour le ml
-transformers
+pydantic==2.6.1
+requests==2.31.0
+# Dépendances ML (CPU pour la légèreté)
+transformers==4.38.0
 torch --index-url https://download.pytorch.org/whl/cpu
