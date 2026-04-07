@@ -1,3 +1,8 @@
-# TÂCHE LIÉE : TT-16 (Configurer docker-compose incluant l'API et Ollama)
-# Responsable : [Nom du Membre D]
-# Description : Orchestration des services 'api' (build du Dockerfile) et 'ollama' (image officielle).
+# TÂCHE LIÉE : TT-16 (Orchestration de l'API et du LLM)
+services:
+  # L'API FastAPI sera définie ici
+  
+  # Pareil pour le motteur Ollama
+
+volumes:
+  # Les volumes persistants seront définis ici
