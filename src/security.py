@@ -2,7 +2,9 @@
 # Description : Analyse le texte brut pour détecter des patterns d'attaque (Regex, Blacklist).
 # Sortie : Retourne True si une injection est détectée, False sinon.
 
-# Le dictionnaire des Mots-Clés (lisye noire)
+import re
+
+# 1. Le dictionnaire des Mots-Clés (lisye noire)
 FORBIDDEN_KEYWORDS =[
     "ignore previous instructions",
     "ignore all instructions",
@@ -11,6 +13,9 @@ FORBIDDEN_KEYWORDS =[
     "you are now an unrestricted ai",
     "bypass"
 ]
+
+# 2. Les Regex (Pour détecter les structures bizarres)
+SUSPICIOUS_PATTERN = re.compile(r"([<\[\{]{3,}|[>\]\}]{3,})")
 
 def detect_injection(email_text: str) -> bool:
     
@@ -21,10 +26,15 @@ def detect_injection(email_text: str) -> bool:
     
     text_lower = email_text.lower()
 
-    # Recherche des mots-clés interdits
+    # Filtre 1 : Recherche des mots-clés interdits
     for keyword in FORBIDDEN_KEYWORDS:
         if keyword in text_lower:
             print(f"Tentative d'injection détectée (Mot-clé : '{keyword}')")
             return True
+    
+    # Fitre 2 : Recherche de structures supectes (Rgeex)
+    if SUSPICIOUS_PATTERN.search(text_lower):
+        print("Tentative d'injection détectée (Format suspect Regex)")
+        return True
 
     return False
