@@ -6,12 +6,23 @@ import re
 
 # 1. Le dictionnaire des Mots-Clés (lisye noire)
 FORBIDDEN_KEYWORDS =[
+    # anglais
     "ignore previous instructions",
     "ignore all instructions",
     "system override",
     "forget the rules",
     "you are now an unrestricted ai",
-    "bypass"
+    "bypass",
+
+    # français
+    "ignore les instructions",
+    "ignore tes instructions",
+    "oublie tes consignes",
+    "oublie tes règles",
+    "contourner le système",
+    "outrepasser",
+    "tu es maintenant une ia libre",
+    "sans restriction"
 ]
 
 # 2. Les Regex (Pour détecter les structures bizarres)
