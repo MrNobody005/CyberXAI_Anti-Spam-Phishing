@@ -11,7 +11,13 @@ services:
       - ollama
 
   
-  # Pareil pour le motteur Ollama
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cyber_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
 
 volumes:
-  # Les volumes persistants seront définis ici
+  ollama_data
