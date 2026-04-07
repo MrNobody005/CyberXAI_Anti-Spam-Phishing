@@ -20,4 +20,4 @@ services:
       - ollama_data:/root/.ollama
 
 volumes:
-  ollama_data
+  ollama_data:
