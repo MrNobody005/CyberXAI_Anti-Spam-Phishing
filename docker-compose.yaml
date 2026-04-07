@@ -1,6 +1,15 @@
 # TÂCHE LIÉE : TT-16 (Orchestration de l'API et du LLM)
 services:
-  # L'API FastAPI sera définie ici
+  api:
+    build: .
+    container_name: cyber_api
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      - ollama
+
   
   # Pareil pour le motteur Ollama
 
