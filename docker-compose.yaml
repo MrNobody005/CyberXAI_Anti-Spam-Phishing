@@ -1,3 +1,34 @@
-# TÂCHE LIÉE : TT-16 (Configurer docker-compose incluant l'API et Ollama)
-# Responsable : [Nom du Membre D]
-# Description : Orchestration des services 'api' (build du Dockerfile) et 'ollama' (image officielle).
+# TÂCHE LIÉE : TT-16 (Orchestration de l'API et du LLM)
+# Objectif : Coordonner le scanner de mails et le moteur d'IA local
+
+services:
+  # 1. SERVICE API : Le moteur de détection (FastAPI)
+  api:
+    # Construit l'image à partir du Dockerfile local
+    build: .
+    container_name: cyber_api
+    ports:
+      - "8000:8000"
+    environment:
+      # CONFIGURATION RÉSEAU : URL pour joindre l'IA via le DNS interne de Docker
+      - OLLAMA_URL=http://ollama:11434
+    depends_on:
+      # SÉCURITÉ OPÉRATIONNELLE : L'IA doit démarrer avant l'API
+      - ollama
+
+  # 2. SERVICE LLM : Le moteur d'IA (Ollama)
+  ollama:
+    # Image officielle pour garantir la stabilité et la sécurité
+    image: ollama/ollama:latest
+    container_name: cyber_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      # PERSISTANCE DES DONNÉES : Stocke les modèles d'IA (ex: phi3) 
+      # pour éviter de les retélécharger à chaque redémarrage
+      - ollama_data:/root/.ollama
+
+# 3. STOCKAGE PERSISTANT
+volumes:
+  # Déclaration du volume nommé pour la base de données d'Ollama
+  ollama_data:
