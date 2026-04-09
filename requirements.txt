@@ -6,3 +6,4 @@ requests==2.31.0
 # Dépendances ML (CPU pour la légèreté)
 transformers==4.38.0
 torch --index-url https://download.pytorch.org/whl/cpu
+pandas==2.2.1
