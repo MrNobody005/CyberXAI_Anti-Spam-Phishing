@@ -53,8 +53,18 @@ DELIMITER_START = "<<<DEBUT_EMAIL_NON_FIABLE>>>"
 DELIMITER_END = "<<<FIN_EMAIL_NON_FIABLE>>>"
 
 def sanitize_for_sandbox(email_text: str) -> str:
-    # Nettoie le texte pour empêcher l'évasion de la sandbox.
-    pass
+    if not email_text:
+        return ""
+        
+    safe_text = email_text
+    # On retire les chevrons dangereux
+    safe_text = safe_text.replace("<<<", "").replace(">>>", "")
+    
+    # On retire nos mots-clés système au cas où le hacker essaie de les deviner
+    safe_text = safe_text.replace("DEBUT_EMAIL_NON_FIABLE", "")
+    safe_text = safe_text.replace("FIN_EMAIL_NON_FIABLE", "")
+    
+    return safe_text
 
 def build_secure_prompt(email_text: str) -> str:
     # Construit le prompt final sécurisé avec les instructions système.
