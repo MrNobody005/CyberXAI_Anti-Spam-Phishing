@@ -46,6 +46,22 @@ def detect_injection(email_text: str) -> bool:
 
     return False
 
+
+# TÂCHE LIÉE : TT-13 (Implémentation d'une Sandbox de Prompt)
+
+DELIMITER_START = "<<<DEBUT_EMAIL_NON_FIABLE>>>"
+DELIMITER_END = "<<<FIN_EMAIL_NON_FIABLE>>>"
+
+def sanitize_for_sandbox(email_text: str) -> str:
+    # Nettoie le texte pour empêcher l'évasion de la sandbox.
+    pass
+
+def build_secure_prompt(email_text: str) -> str:
+    # Construit le prompt final sécurisé avec les instructions système.
+    pass
+
+
+
 # --- TEST ---
 if __name__ == "__main__":
     mail_normal = "Bonjour, voici la facture du mois d'avril en pièce jointe."
