@@ -1,47 +1,55 @@
-# TÂCHE LIÉE : US-02 (Automatisation du tri) & TT-15 (FastAPI)
+# TÂCHE LIÉE : US-02 (Automatisation du tri) & #9
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
+
+# Imports de tes modules et de ceux de tes collègues
 from src.security import detect_injection, build_secure_prompt
+from src.cleaner import clean_email_text
+from src.detection import PhishingDetector
 
-app = FastAPI(title="CyberXAI - Anti-Phishing API")
+# Gestion du cycle de vie de l'IA (Chargement unique au démarrage)
+ml_models = {}
 
-# Modèle de données pour recevoir le mail
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Démarrage : On charge le modèle en mémoire 
+    ml_models["detector"] = PhishingDetector()
+    yield
+    # Arrêt : On libère les ressources
+    ml_models.clear()
+
+app = FastAPI(title="CyberXAI - Anti-Phishing API", lifespan=lifespan)
+
 class EmailInput(BaseModel):
     subject: str
     body: str
     sender: str
 
-@app.get("/")
-def read_root():
-    return {"status": "online", "message": "CyberXAI API is running"}
-
 @app.post("/predict")
 async def predict_email(email: EmailInput):
-    # On rassemble le sujet et le corps du mail pour tout analyser
-    full_text = f"{email.subject}\n{email.body}"
+    # 1. NETTOYAGE : On retire le HTML et les headers SMTP [cite: 32, 33]
+    raw_text = f"{email.subject}\n{email.body}"
+    clean_text = clean_email_text(raw_text)
 
-    # 1. Anti-Injection
-    if detect_injection(full_text):
-        # Si une attaque est détectée, on lève une erreur HTTP 400 immédiatement
+    # 2. SÉCURITÉ : Anti-Injection sur le texte propre [cite: 22]
+    if detect_injection(clean_text):
         raise HTTPException(
             status_code=400, 
-            detail="[ALERTE SÉCURITÉ] Tentative de Prompt Injection ou de Jailbreak bloquée."
+            detail="[ALERTE SÉCURITÉ] Tentative de manipulation détectée."
         )
 
-    # 2. SANDBOX (Préparation pour l'IA)
-    # Si le texte est propre, on l'enferme dans la Sandbox
-    secure_prompt = build_secure_prompt(full_text)
+    # 3. ANALYSE IA : Appel au modèle DistilBERT (#9)
+    score, verdict = ml_models["detector"].get_score(clean_text)
 
-    # --- SIMULATION DE L'IA (En attendant la tâche de Membre B) ---
-    # Pour vérifier que ça marche, on l'affiche dans ton terminal
-    print("\n=== [DEBUG] PROMPT PRÊT POUR L'IA ===")
-    print(secure_prompt)
-    print("=====================================\n")
+    # 4. SANDBOX : Préparation du prompt sécurisé pour l'étape Ollama (#16) [cite: 23]
+    # On enferme le mail nettoyé dans les balises sécurisées
+    secure_prompt = build_secure_prompt(clean_text)
 
-    # Pour le test on renvoie une réponse factice
     return {
-        "score_confiance": 95.0,
-        "verdict": "Sain",
-        "details": "Mail analysé et mis en Sandbox avec succès (Modèle ML en cours d'intégration)",
-        "security_status": "Passed"
+        "score_confiance": score,
+        "verdict": verdict,
+        "security_status": "Passed",
+        "details": "Analyse DistilBERT effectuée sur texte nettoyé",
+        "debug_prompt": secure_prompt[:100] + "..." # Pour vérification [cite: 23]
     }
