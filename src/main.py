@@ -1,55 +1,62 @@
-# TÂCHE LIÉE : US-02 (Automatisation du tri) & #9
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 
 # Imports de tes modules et de ceux de tes collègues
 from src.security import detect_injection, build_secure_prompt
 from src.cleaner import clean_email_text
 from src.detection import PhishingDetector
+from src.scoring import compute_final_score
 
-# Gestion du cycle de vie de l'IA (Chargement unique au démarrage)
-ml_models = {}
+# Initialisation du détecteur (Moteur IA DistilBERT)
+detector = PhishingDetector()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Démarrage : On charge le modèle en mémoire 
-    ml_models["detector"] = PhishingDetector()
     yield
-    # Arrêt : On libère les ressources
-    ml_models.clear()
 
-app = FastAPI(title="CyberXAI - Anti-Phishing API", lifespan=lifespan)
+app = FastAPI(title="CyberXAI - Anti-Phishing API", version="1.0.0", lifespan=lifespan)
 
 class EmailInput(BaseModel):
-    subject: str
-    body: str
-    sender: str
+    subject: str = Field(..., min_length=1, description="Sujet du mail")
+    body: str = Field(..., min_length=1, description="Corps du mail")
+    sender: str = Field(..., min_length=1, description="Expéditeur du mail")
+
+@app.get("/")
+def read_root():
+    return {"status": "online", "message": "CyberXAI API is running"}
 
 @app.post("/predict")
 async def predict_email(email: EmailInput):
-    # 1. NETTOYAGE : On retire le HTML et les headers SMTP [cite: 32, 33]
-    raw_text = f"{email.subject}\n{email.body}"
-    clean_text = clean_email_text(raw_text)
+    full_text = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
+    cleaned_text = clean_email_text(full_text)
+
+    if not cleaned_text:
+        raise HTTPException(status_code=400, detail="Le contenu du mail est vide après nettoyage.")
 
     # 2. SÉCURITÉ : Anti-Injection sur le texte propre [cite: 22]
-    if detect_injection(clean_text):
+    if detect_injection(cleaned_text):
         raise HTTPException(
             status_code=400, 
             detail="[ALERTE SÉCURITÉ] Tentative de manipulation détectée."
         )
 
-    # 3. ANALYSE IA : Appel au modèle DistilBERT (#9)
-    score, verdict = ml_models["detector"].get_score(clean_text)
-
-    # 4. SANDBOX : Préparation du prompt sécurisé pour l'étape Ollama (#16) [cite: 23]
+    # Préparation du prompt sécurisé pour l'étape Ollama (#16) [cite: 23]
     # On enferme le mail nettoyé dans les balises sécurisées
-    secure_prompt = build_secure_prompt(clean_text)
+    secure_prompt = build_secure_prompt(cleaned_text)
+
+    result = compute_final_score(secure_prompt, detector)
+    final_score = result["final_score"]
+    verdict = "Sain" if final_score >= 0.60 else "Phishing"
 
     return {
-        "score_confiance": score,
-        "verdict": verdict,
-        "security_status": "Passed",
-        "details": "Analyse DistilBERT effectuée sur texte nettoyé",
-        "debug_prompt": secure_prompt[:100] + "..." # Pour vérification [cite: 23]
-    }
+            "score_confiance": round(final_score * 100, 2),
+            "verdict": verdict,
+            "security_status": "Passed",
+            "details": {
+                "score_heuristique": round(result["heuristic_score"] * 100, 2),
+                "score_ia": round(result["ml_score"] * 100, 2),
+                "raisons": result["reasons"],
+                "note": "Analyse effectuée sur texte nettoyé et sandboxed"
+            },
+        }

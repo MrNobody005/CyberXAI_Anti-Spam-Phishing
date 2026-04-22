@@ -1,8 +1,11 @@
-# TÂCHE LIÉE : #9 (Classification binaire DistilBERT)
-from transformers import pipeline
 import os
+from transformers import pipeline
 
 class PhishingDetector:
+    """
+    Moteur d'inférence DistilBERT (Tâche #9).
+    Intègre la détection du modèle local et le scoring hybride.
+    """
     def __init__(self):
         # On définit le chemin local pour le futur modèle fine-tuné (Tâche #1)
         self.model_dir = "./models/final_model"
@@ -16,22 +19,30 @@ class PhishingDetector:
         self.classifier = pipeline(
             "text-classification",
             model=model_to_load,
-            device=-1 # Forcer l'utilisation du CPU pour la légèreté [cite: 2]
+            device=-1,
+            truncation=True
         )
 
-    def get_score(self, text: str):
-        # On limite à 512 tokens (limite technique de DistilBERT)
-        # On ne traite que les 1000 premiers caractères pour la performance
+
+    def predict_score(self, text: str) -> float:
+        """
+        Renvoie un score entre 0.0 (Phishing) et 1.0 (Sain).
+        Format requis pour l'algorithme de scoring hybride (#11).
+        """
+        if not text or not text.strip():
+            return 0.5 # Score neutre en cas de texte vide
+
+        # Inférence (limitée à 1000 caractères pour la performance)
         result = self.classifier(text[:1000])[0]
         
-        label = result['label']
-        raw_score = result['score']
+        label = result['label'].upper()
+        score = float(result['score'])
+
+        # Mapping des scores (À affiner après le fine-tuning de la Tâche #1)
+        # Pour distilbert-base-uncased par défaut :
+        # LABEL_1 est souvent interprété comme l'anomalie (Phishing)
+        if label == "LABEL_1":
+            # Si le modèle détecte une anomalie, le score "sain" diminue
+            return round(1.0 - score, 3)
         
-        # Conversion en score de confiance 0-100
-        # NOTE : À adapter selon le mapping final du Membre B (ex: LABEL_1 = Phishing)
-        confidence = raw_score * 100
-        
-        # Verdict basé sur le label
-        verdict = "Sain" if label == "LABEL_0" else "Malveillant"
-        
-        return round(confidence, 2), verdict
+        return round(score, 3)
