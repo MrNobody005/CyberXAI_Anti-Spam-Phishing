@@ -1,5 +1,5 @@
 import re
-from src.core.preprocessing import preprocess_text, normalize_text
+from src.cleaner import clean_email_text, normalize_text
 
 URGENT_WORDS = [
     "urgent",
@@ -38,7 +38,6 @@ MONEY_WORDS = [
     "remboursement",
     "refund",
     "loterie",
-    "loterie",
     "gagné",
     "gagne",
     "winner",
@@ -68,19 +67,28 @@ CALL_TO_ACTION_WORDS = [
 def contains_any_keyword(text: str, keywords: list[str]) -> bool:
     return any(keyword in text for keyword in keywords)
 
+
 def count_uppercase_ratio(text: str) -> float:
     letters = [char for char in text if char.isalpha()]
     if not letters:
         return 0.0
+
     uppercase_count = sum(1 for char in letters if char.isupper())
     return uppercase_count / len(letters)
+
 
 def extract_urls(text: str) -> list[str]:
     url_pattern = r"https?://[^\s]+|www\.[^\s]+"
     return re.findall(url_pattern, text, flags=re.IGNORECASE)
 
+
 def score_heuristics(text: str) -> tuple[float, list[str]]:
-    raw_text = preprocess_text(text)
+    """
+    Retourne un score de sûreté :
+    - 1.0 = sûr
+    - 0.0 = phishing
+    """
+    raw_text = clean_email_text(text)
     clean_text = normalize_text(text)
 
     score = 1.0
