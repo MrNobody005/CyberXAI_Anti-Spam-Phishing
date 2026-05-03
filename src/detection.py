@@ -6,40 +6,34 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 MODEL_NAME = "nikosthoumyre/CyberXAI-Phishing-Detector"
 
-print(f"⏳ Chargement du modèle IA depuis Hugging Face ({MODEL_NAME})...")
-# On utilise la nouvelle classe ici aussi !
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
-print("✅ Modèle chargé et prêt pour l'analyse !")
-
-def calculate_phishing_score(text: str):
+class PhishingDetector:
     """
-    Analyse le texte avec DistilBERT et retourne un verdict et un score de confiance.
+    Moteur d'inférence DistilBERT (Tâche #9).
+    Intègre la détection du modèle local et le scoring hybride.
     """
-    # 1. Le traducteur (Tokenizer) transforme le texte en nombres
-    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
-    
-    # 2. Le modèle fait sa prédiction (sans modifier ses poids)
-    with torch.no_grad():
-        outputs = model(**inputs)
-    
-    # 3. On transforme les résultats bruts en pourcentages (Probabilités)
-    probs = F.softmax(outputs.logits, dim=-1)
-    
-    # Label 0 = Sain, Label 1 = Phishing
-    prob_sain = probs[0][0].item() * 100
-    prob_phishing = probs[0][1].item() * 100
-    
-    # 4. On détermine le verdict final
-    if prob_phishing > 50.0:
-        verdict = "Phishing"
-        score = prob_phishing
-    else:
-        verdict = "Sain"
-        score = prob_sain
+    def __init__(self):
+        print(f"⏳ Chargement du modèle IA depuis Hugging Face ({MODEL_NAME})...")
+        # On utilise la nouvelle classe ici aussi !
+        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+        self.model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
+        self.model.to('cpu')  # On force le CPU pour la légèreté Docker
+        print("✅ Modèle chargé et prêt pour l'analyse !")
 
-    return {
-        "verdict": verdict,
-        "score_confiance": round(score, 2),
-        "details": f"Probabilité d'être du phishing : {round(prob_phishing, 2)}%"
-    }
+    def predict_score(self, text: str) -> float:
+        """
+        Analyse le texte avec DistilBERT et retourne un verdict et un score de confiance.
+        """
+        # 1. Le traducteur (Tokenizer) transforme le texte en nombres
+        inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+        
+        # 2. Le modèle fait sa prédiction (sans modifier ses poids)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        
+        # 3. On transforme les résultats bruts en pourcentages (Probabilités)
+        probs = F.softmax(outputs.logits, dim=-1)
+        
+        # Label 0 = Sain, Label 1 = Phishing
+        prob_sain = probs[0][0].item() * 100
+        
+        return round(prob_sain, 3)

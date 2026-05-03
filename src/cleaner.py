@@ -2,6 +2,13 @@ import re
 from bs4 import BeautifulSoup
 
 def clean_email_text(raw_text):
+    """
+    Nettoyage complet pour l'IA et la sécurité :
+    - Suppression des headers SMTP
+    - Extraction du texte HTML
+    - Tokenisation des URLs
+    - Normalisation des espaces
+    """
     if not isinstance(raw_text, str):
         return ""
 
@@ -11,6 +18,13 @@ def clean_email_text(raw_text):
     text = re.sub(r'\s+', ' ', text)
 
     return text.strip()
+
+
+def normalize_text(text: str) -> str:
+    """
+    Version normalisée pour les recherches de mots-clés heuristiques.
+    """
+    return clean_email_text(text).lower()
 
 if __name__ == "__main__":
     mail_sale = """
