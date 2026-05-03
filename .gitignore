@@ -3,4 +3,5 @@ __pycache__/
 *.pyd
 venv/
 .vscode/
-data
+data/*
+!data/prompt_injections.csv
