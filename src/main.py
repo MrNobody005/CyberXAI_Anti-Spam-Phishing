@@ -2,6 +2,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from src.security import detect_injection, build_secure_prompt
+# On importe ta nouvelle fonction d'IA !
+from src.detection import calculate_phishing_score 
 
 app = FastAPI(title="CyberXAI - Anti-Phishing API")
 
@@ -32,16 +34,14 @@ async def predict_email(email: EmailInput):
     # Si le texte est propre, on l'enferme dans la Sandbox
     secure_prompt = build_secure_prompt(full_text)
 
-    # --- SIMULATION DE L'IA (En attendant la tâche de Membre B) ---
-    # Pour vérifier que ça marche, on l'affiche dans ton terminal
-    print("\n=== [DEBUG] PROMPT PRÊT POUR L'IA ===")
-    print(secure_prompt)
-    print("=====================================\n")
+    # 3. ANALYSE PAR TON IA (Fin de la simulation !)
+    # On passe le texte sécurisé au vrai modèle DistilBERT
+    resultats_ia = calculate_phishing_score(secure_prompt)
 
-    # Pour le test on renvoie une réponse factice
+    # On renvoie la vraie réponse générée par l'Intelligence Artificielle
     return {
-        "score_confiance": 95.0,
-        "verdict": "Sain",
-        "details": "Mail analysé et mis en Sandbox avec succès (Modèle ML en cours d'intégration)",
+        "score_confiance": resultats_ia["score_confiance"],
+        "verdict": resultats_ia["verdict"],
+        "details": resultats_ia["details"],
         "security_status": "Passed"
     }
