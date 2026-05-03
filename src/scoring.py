@@ -17,7 +17,7 @@ def compute_final_score(text: str, detector: PhishingDetector) -> dict:
     """
     heuristic_score, reasons = score_heuristics(text)
 
-    ml_phishing_score = detector.predict_phishing_score(text)
+    ml_phishing_score = detector.predict_score(text)
     ml_safe_score = round(1.0 - ml_phishing_score, 3)
 
     final_score = (HEURISTIC_WEIGHT * heuristic_score) + (ML_WEIGHT * ml_safe_score)
