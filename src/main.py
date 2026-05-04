@@ -28,18 +28,19 @@ def read_root():
 
 @app.post("/predict")
 async def predict_email(email: EmailInput):
-    full_text = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
-    cleaned_text = clean_email_text(full_text)
+    full_text_raw = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
 
-    if not cleaned_text:
-        raise HTTPException(status_code=400, detail="Le contenu du mail est vide après nettoyage.")
-
-    # 2. SÉCURITÉ : Anti-Injection sur le texte propre [cite: 22]
-    if detect_injection(cleaned_text):
+    # SÉCURITÉ : Anti-Injection sur le texte propre [cite: 22]
+    if detect_injection(full_text_raw):
         raise HTTPException(
             status_code=400, 
             detail="[ALERTE SÉCURITÉ] Tentative de manipulation détectée."
         )
+    
+    cleaned_text = clean_email_text(full_text_raw)
+
+    if not cleaned_text:
+        raise HTTPException(status_code=400, detail="Le contenu du mail est vide après nettoyage.")
 
     # Préparation du prompt sécurisé pour l'étape Ollama (#16) [cite: 23]
     # On enferme le mail nettoyé dans les balises sécurisées
