@@ -7,70 +7,75 @@ Ce projet propose une solution de détection de courriels frauduleux reposant su
 ## ⚖️ Disclaimer (Avertissement Légal)
 
 > **[IMPORTANT] Cadre Éducatif et Non Professionnel**
-> 
-> Ce projet est réalisé par des **étudiants** dans un cadre strictement **pédagogique et non lucratif**. 
-> * **Limites techniques** : Bien que le système affiche une résilience de 100% sur nos jeux de tests internes, il n'est pas conçu pour une utilisation en environnement de production critique.
-> * **Responsabilité** : Les auteurs ne sauraient être tenus responsables des éventuels échecs de détection ou dommages liés à l'utilisation de cet outil.
-> * **Données** : Ce logiciel traite des données textuelles. Aucune donnée n'est revendue ou utilisée en dehors du cadre de cette expérimentation scientifique.
+>
+> Ce projet est réalisé par des **étudiants** dans un cadre strictement **pédagogique et non lucratif**.
+>
+> Ce projet est réalisé par des **étudiants** dans un cadre strictement **pédagogique et non lucratif**.
+>
+> - **Limites techniques** : Ce prototype n'est pas conçu pour une utilisation en environnement de production critique.
+> - **Responsabilité** : Les auteurs ne sauraient être tenus responsables des éventuels échecs de détection ou dommages liés à l'utilisation de cet outil.
+> - **Données** : Aucune donnée traitée n'est conservée ou utilisée à des fins commerciales.
 
 ---
 
 ## 🏛️ Architecture du Système
 
-Le flux de données suit un pipeline de sécurité rigoureux pour garantir que l'IA ne soit pas manipulée par des attaques sémantiques.
+Le système utilise un pipeline de détection à quatre niveaux :
 
-
-
-1.  **Couche Cyber (Anti-Injection)** : Analyse du texte **brut** via des expressions régulières (Regex) et une liste noire pour bloquer les tentatives de *Prompt Injection* (ex: "Ignore instructions").
-2.  **Couche Heuristique** : Recherche de signaux faibles (IBAN, mots d'urgence, majuscules excessives).
-3.  **Couche ML (DistilBERT)** : Inférence rapide sur le texte nettoyé pour obtenir un premier score de probabilité.
-4.  **Couche SLM (Phi-3)** : Analyse sémantique profonde via Ollama pour valider le verdict et fournir une explication.
+1. **Couche Cyber (Anti-Injection)** : Analyse du texte **brut** via Regex pour bloquer les tentatives de manipulation du LLM (Jailbreak).
+2. **Couche Heuristique** : Recherche de signaux faibles statistiques (IBAN, urgence, URLs).
+3. **Couche ML (DistilBERT)** : Inférence rapide via un modèle fine-tuné sur Hugging Face (`nikosthoumyre/CyberXAI-Phishing-Detector`).
+4. **Couche SLM (Phi-3 Mini)** : Analyse sémantique profonde via Ollama pour détecter les intentions malveillantes complexes.
 
 ---
 
 ## 📊 Méthodologie de Recherche et Données
 
-### Sources de Données
-*   **Kaggle** : Les données brutes proviennent de datasets publics de phishing (ex: `raw_mails.csv`).
-*   **Traitement** : Le script `data_loader.py` normalise les labels (Sain vs Phishing) et nettoie les doublons.
+### Entraînement et Données
 
-### Entraînement (Google Colab & Hugging Face)
-*   **Entraînement** : Le modèle a été fine-tuné sur **Google Colab** pour bénéficier de l'accélération GPU.
-*   **Hébergement** : Le modèle final est hébergé sur **Hugging Face** (`nikosthoumyre/CyberXAI-Phishing-Detector`) et téléchargé dynamiquement par l'API.
+- **Source** : Datasets publics Kaggle et Hugging Face (`zionia/phishing-emails`).
+- **Entraînement** : Fine-tuning réalisé sur **Google Colab** (GPU T4) pour le modèle DistilBERT.
+
+### Résultats de Résilience (Metrics)
+
+- **Attaques par Injection** : **100%** de blocage sur le dataset de test interne.
+- **Phishing Réel** : **~62%** de détection sémantique sur des échantillons externes complexes.
+- **Faux Positifs** : Sécurité renforcée pour éviter de bloquer des termes communs (ex: "dans").
 
 ---
 
 ## 💻 Structure du Répertoire
 
-| Fichier / Dossier | Description |
-| :--- | :--- |
-| `src/main.py` | Point d'entrée FastAPI gérant l'orchestration des services. |
-| `src/security.py` | Moteur de détection d'injections et sandbox de prompt. |
-| `src/slm_analysis.py` | Interface de communication avec le modèle Phi-3 via Ollama. |
-| `src/detection.py` | Chargeur du modèle DistilBERT depuis Hugging Face. |
-| `src/scoring.py` | Logique de calcul du score final pondéré. |
-| `src/pentest_report.py` | Script de test automatisé de la résilience cyber. |
-| `notebooks/EDA_Analysis.ipynb` | Analyse exploratoire des données (longueur, répartition). |
+| Fichier / Dossier              | Description                                                 |
+| :----------------------------- | :---------------------------------------------------------- |
+| `src/main.py`                  | Point d'entrée FastAPI gérant l'orchestration des services. |
+| `src/security.py`              | Moteur de détection d'injections et sandbox de prompt.      |
+| `src/slm_analysis.py`          | Interface de communication avec le modèle Phi-3 via Ollama. |
+| `src/detection.py`             | Chargeur du modèle DistilBERT depuis Hugging Face.          |
+| `src/scoring.py`               | Logique de calcul du score final pondéré.                   |
+| `src/pentest_report.py`        | Script de test automatisé de la résilience cyber.           |
+| `notebooks/EDA_Analysis.ipynb` | Analyse exploratoire des données (longueur, répartition).   |
+| `src/resilience_evaluator.py`  | Stress test sur dataset réel (Hugging Face).                |
 
 ---
 
 ## 🧪 Logique de Scoring
 
-Le score de confiance final ($S_{final}$) est calculé selon une pondération hybride entre l'heuristique ($H$) et l'IA classique ($ML$) :
+Le score de confiance final ($S_{final}$) repose sur une décision multicritère :
 
-$$S_{final} = (0.4 \times H) + (0.6 \times ML)$$
-
-Le verdict du **SLM Phi-3** intervient en complément sémantique pour confirmer le label final.
+$$S_{final} = (0.2 \times S_{Heuristique}) + (0.5 \times S_{DistilBERT}) + (0.3 \times S_{Phi3})$$
 
 ---
 
 ## 🚀 Installation et Utilisation
 
 ### Prérequis
-*   Docker et Docker Compose.
-*   Une connexion internet (pour le téléchargement initial du modèle Hugging Face).
+
+- Docker et Docker Compose.
+- Une connexion internet (pour le téléchargement initial du modèle Hugging Face).
 
 ### Lancement
+
 1.  **Démarrer l'infrastructure** :
     ```bash
     docker compose up --build
@@ -78,21 +83,24 @@ Le verdict du **SLM Phi-3** intervient en complément sémantique pour confirmer
 2.  **Accéder à l'interface de test (Swagger)** :
     Rendez-vous sur `http://localhost:8000/docs`.
 
-3.  **Lancer le Pentest** :
+3.  **Lancer l'évaluation de résilience externe** :
+
 ```bash
-    python src/pentest_report.py
+    python3 src/resilience_evaluator.py
 ```
 
 ---
 
 ## 🛠️ Technologies Utilisées
-*   **Backend** : FastAPI (Python 3.11).
-*   **ML Frameworks** : Transformers (Hugging Face), PyTorch.
-*   **LLM Runtime** : Ollama (Modèle Phi-3 Mini).
-*   **Infrastucture** : Docker & Docker Compose.
+
+- **Backend** : FastAPI (Python 3.11).
+- **ML Frameworks** : Transformers (Hugging Face), PyTorch.
+- **LLM Runtime** : Ollama (Modèle Phi-3 Mini).
+- **Infrastucture** : Docker & Docker Compose.
 
 ---
 
 ## 📈 Résultats de Résilience
-*   **Taux de détection des injections** : 100% sur le dataset `prompt_injections.csv`.
-*   **Analyse Exploratoire** : Validée via le notebook EDA (répartition équilibrée des classes).
+
+- **Taux de détection des injections** : 100% sur le dataset `prompt_injections.csv`.
+- **Analyse Exploratoire** : Validée via le notebook EDA (répartition équilibrée des classes).

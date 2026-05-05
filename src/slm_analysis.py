@@ -31,7 +31,7 @@ def analyze_with_slm(email_text: str) -> dict:
         response = requests.post(
             f"{OLLAMA_URL}/api/generate",
             json=payload,
-            timeout=20
+            timeout=60
         )
 
         response.raise_for_status()
