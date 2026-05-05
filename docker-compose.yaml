@@ -1,6 +1,3 @@
-# TÂCHE LIÉE : TT-16 (Orchestration de l'API et du LLM)
-# Objectif : Coordonner le scanner de mails et le moteur d'IA local
-
 services:
   # 1. SERVICE API : Le moteur de détection (FastAPI)
   api:
@@ -14,8 +11,6 @@ services:
     environment:
       # CONFIGURATION RÉSEAU : URL pour joindre l'IA via le DNS interne de Docker
       - OLLAMA_URL=http://ollama:11434
-
-      # 🔥 AJOUT POUR TA TÂCHE #10
       - OLLAMA_MODEL=phi3
 
     depends_on:
