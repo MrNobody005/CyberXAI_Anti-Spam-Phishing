@@ -41,6 +41,8 @@ async def analyze_mail_ui(request: Request, sender: str = Form(...), subject: st
     
     try:
         result = await predict_email(email_data)
+        if result["details"]["analyse_slm"]["verdict"] == "phishing":
+            result["details"]["raisons"].append("Analyse sémantique IA : Intention malveillante détectée")
         return templates.TemplateResponse("index.html", {"request": request, "result": result, "active_tab": "single"})
     except HTTPException as e:
         error_result = {
