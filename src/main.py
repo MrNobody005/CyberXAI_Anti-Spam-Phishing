@@ -36,20 +36,18 @@ def read_root():
 
 @app.post("/predict")
 async def predict_email(email: EmailInput):
-    full_text = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
-    cleaned_text = clean_email_text(full_text)
+    full_text_raw = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
 
-    if not cleaned_text:
-        raise HTTPException(
-            status_code=400,
-            detail="Le contenu du mail est vide après nettoyage."
-        )
-
-    if detect_injection(cleaned_text):
+    if detect_injection(full_text_raw):
         raise HTTPException(
             status_code=400,
             detail="[ALERTE SÉCURITÉ] Tentative de manipulation détectée."
         )
+    
+    cleaned_text = clean_email_text(full_text_raw)
+
+    if not cleaned_text:
+        raise HTTPException(status_code=400, detail="Le contenu du mail est vide après nettoyage.")
 
     result = compute_final_score(cleaned_text, detector)
     slm_result = analyze_with_slm(cleaned_text)

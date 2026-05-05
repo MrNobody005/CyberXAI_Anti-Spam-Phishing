@@ -24,11 +24,16 @@ FORBIDDEN_KEYWORDS =[
 ]
 
 INJECTION_PATTERNS = [
-    re.compile(r"ignore\s+all\s+previous\s+instructions", re.I),
-    re.compile(r"system\s*prompt", re.I),
-    re.compile(r"you\s+are\s+now\s+an\s+unrestricted", re.I),
-    re.compile(r"act\s+as\s+a\s+(hacker|developer)", re.I),
-    re.compile(r"([<\[\{]{3,}|[>\]\}]{3,})") # Détecte <<< >>> ou [[[ ]]]
+    re.compile(r"(ignore|disregard|oublie|outrepasser)\s+(all|the|toutes|les|votre|tes|mes|the|above)?\s*(previous|context|instructions|consignes|règles)", re.I),
+    re.compile(r"(developer|admin|system|root|unrestricted|chercheur|administrateur)\s*(mode|command|privilege|activé|enabled|status)", re.I),
+    re.compile(r"(reveal|print|affiche|donne|show)\s*.*(initial|system|hidden)\s*(prompt|instructions|config)", re.I),
+    re.compile(r"(<script|javascript:|System\.exit|process\.exit|return\s*['\"])", re.I),
+    re.compile(r"```[a-z]*\s+", re.I),
+    re.compile(r"(===\s*END|END\s*OF|FIN\s*DU?\s*M|NEW\s*INSTRUCTIONS)", re.I),
+    re.compile(r"(<script|javascript:|System\.exit|process\.exit|return\s*['\"])", re.I),
+    re.compile(r"(chercheur|security\s*researcher|white\s*hat|pentest|test|research)\s*.*(security|sécurité|système|inoffensif|test)", re.I),
+    re.compile(r"(translate|traduire|start\s*your\s*translation)\s*.*(safe|sain|légitime)", re.I), 
+    re.compile(r"([<\[\{]{2,}|[>\]\}]{2,})")
 ]
 
 def detect_injection(email_text: str) -> bool:
