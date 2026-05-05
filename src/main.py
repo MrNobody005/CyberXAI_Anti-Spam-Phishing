@@ -82,17 +82,20 @@ async def run_resilience_ui(request: Request):
     results = []
     for item in samples:
         content = item.get('text') or item.get('body') or item.get('text_combined') or ""
-        
         cleaned = clean_email_text(content)
         slm_res = analyze_with_slm(cleaned)
         hybrid_res = compute_final_score(cleaned, detector, slm_score=slm_res["score"])
+
+        raisons = hybrid_res["reasons"]
+        if slm_res["verdict"] == "phishing":
+            raisons.append("Analyse sémantique IA : Intention malveillante détectée")
         
         results.append({
             "payload": content,
             "status": hybrid_res["label"].upper(),
             "score_global": hybrid_res["final_score"] * 100,
             "slm_verdict": slm_res["verdict"],
-            "raisons": hybrid_res["reasons"]
+            "raisons": raisons
         })
     return templates.TemplateResponse("index.html", {
         "request": request, "batch_results": results, 
