@@ -38,7 +38,7 @@ def read_root():
 async def predict_email(email: EmailInput):
     full_text_raw = f"From: {email.sender}\nSubject: {email.subject}\n\n{email.body}"
 
-    if detect_injection(cleaned_text):
+    if detect_injection(full_text_raw):
         raise HTTPException(
             status_code=400,
             detail="[ALERTE SÉCURITÉ] Tentative de manipulation détectée."
