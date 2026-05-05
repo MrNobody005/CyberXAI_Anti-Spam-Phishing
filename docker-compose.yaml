@@ -12,6 +12,10 @@ services:
     environment:
       # CONFIGURATION RÉSEAU : URL pour joindre l'IA via le DNS interne de Docker
       - OLLAMA_URL=http://ollama:11434
+
+      # 🔥 AJOUT POUR TA TÂCHE #10
+      - OLLAMA_MODEL=phi3
+
     depends_on:
       # SÉCURITÉ OPÉRATIONNELLE : L'IA doit démarrer avant l'API
       - ollama
