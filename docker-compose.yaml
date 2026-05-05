@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     volumes:
       - ./src:/app/src
+      - ./templates:/app/templates
+      - ./data:/app/data
     environment:
       # CONFIGURATION RÉSEAU : URL pour joindre l'IA via le DNS interne de Docker
       - OLLAMA_URL=http://ollama:11434

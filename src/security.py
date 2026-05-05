@@ -24,13 +24,12 @@ FORBIDDEN_KEYWORDS =[
 ]
 
 INJECTION_PATTERNS = [
-    re.compile(r"(ignore|disregard|oublie|outrepasser)\s+(all|the|toutes|les|votre|tes|mes|the|above)?\s*(previous|context|instructions|consignes|règles)", re.I),
+    re.compile(r"(ignore|disregard|oublie|outrepasser)\s+(?:\w+\s+){0,3}(previous|context|instructions|consignes|règles)", re.I),
     re.compile(r"(developer|admin|system|root|unrestricted|chercheur|administrateur)\s*(mode|command|privilege|activé|enabled|status)", re.I),
     re.compile(r"(reveal|print|affiche|donne|show)\s*.*(initial|system|hidden)\s*(prompt|instructions|config)", re.I),
     re.compile(r"(<script|javascript:|System\.exit|process\.exit|return\s*['\"])", re.I),
     re.compile(r"```[a-z]*\s+", re.I),
     re.compile(r"(===\s*END|END\s*OF|FIN\s*DU?\s*M|NEW\s*INSTRUCTIONS)", re.I),
-    re.compile(r"(<script|javascript:|System\.exit|process\.exit|return\s*['\"])", re.I),
     re.compile(r"(chercheur|security\s*researcher|white\s*hat|pentest|test|research)\s*.*(security|sécurité|système|inoffensif|test)", re.I),
     re.compile(r"(translate|traduire|start\s*your\s*translation)\s*.*(safe|sain|légitime)", re.I), 
     re.compile(r"([<\[\{]{2,}|[>\]\}]{2,})")
@@ -48,7 +47,8 @@ def detect_injection(email_text: str) -> bool:
 
     # Filtre 1 : Recherche rapide par mots-clés
     for keyword in FORBIDDEN_KEYWORDS:
-        if keyword in text_lower:
+        pattern = re.compile(rf"\b{re.escape(keyword)}\b", re.I)
+        if pattern.search(text_lower):
             print(f"--- [ALERTE] Injection bloquée (Mot-clé : '{keyword}') ---")
             return True
     
